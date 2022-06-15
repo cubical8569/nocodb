@@ -74,7 +74,7 @@ class BaseModelSqlv2 {
   private _proto: any;
   private _columns = {};
 
-  private config: any = {
+  public static readonly config: any = {
     limitDefault: Math.max(+process.env.DB_QUERY_LIMIT_DEFAULT || 25, 1),
     limitMin: Math.max(+process.env.DB_QUERY_LIMIT_MIN || 1, 1),
     limitMax: Math.max(+process.env.DB_QUERY_LIMIT_MAX || 1000, 1),
@@ -2898,7 +2898,7 @@ class BaseModelSqlv2 {
   }
 }
 
-function extractSortsObject(
+export function extractSortsObject(
   _sorts: string | string[],
   aliasColObjMap: { [columnAlias: string]: Column }
 ): Sort[] | void {
@@ -2919,7 +2919,7 @@ function extractSortsObject(
   });
 }
 
-function extractFilterFromXwhere(
+export function extractFilterFromXwhere(
   str,
   aliasColObjMap: { [columnAlias: string]: Column }
 ) {
@@ -2986,7 +2986,7 @@ function extractFilterFromXwhere(
   return nestedArrayConditions;
 }
 
-function extractCondition(nestedArrayConditions, aliasColObjMap) {
+export function extractCondition(nestedArrayConditions, aliasColObjMap) {
   return nestedArrayConditions?.map((str) => {
     // eslint-disable-next-line prefer-const
     let [logicOp, alias, op, value] =
@@ -3026,6 +3026,25 @@ function _wherePk(primaryKeys: Column[], id) {
 
 function getCompositePk(primaryKeys: Column[], row) {
   return primaryKeys.map((c) => row[c.title]).join('___');
+}
+
+export function getListArgs(args: XcFilterWithAlias, model: Model): XcFilter {
+  const obj: XcFilter = {};
+  obj.where = args.where || args.w || '';
+  obj.having = args.having || args.h || '';
+  obj.condition = args.condition || args.c || {};
+  obj.conditionGraph = args.conditionGraph || {};
+  obj.limit = Math.max(
+    Math.min(
+      args.limit || args.l || BaseModelSqlv2.config.limitDefault,
+      BaseModelSqlv2.config.limitMax
+    ),
+    BaseModelSqlv2.config.limitMin
+  );
+  obj.offset = Math.max(+(args.offset || args.o) || 0, 0);
+  obj.fields = args.fields || args.f || '*';
+  obj.sort = args.sort || args.s || model.primaryKey?.[0]?.tn;
+  return obj;
 }
 
 export { BaseModelSqlv2 };
