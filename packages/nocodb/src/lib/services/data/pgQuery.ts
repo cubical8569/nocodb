@@ -21,7 +21,6 @@ import FormulaColumn from '../../models/FormulaColumn';
 import formulaQueryBuilderv2 from '../../db/sql-data-mapper/lib/sql/formulav2/formulaQueryBuilderv2';
 import View from '../../models/View';
 import Base from '../../models/Base';
-
 const ROOT_ALIAS = '__nc_root';
 
 let aliasC = 0;
@@ -105,7 +104,8 @@ export async function populateSingleQuery(ctx: {
       column,
       knex,
       rootAlias: ROOT_ALIAS,
-      qb
+      qb,
+      params: ctx?.params?.nested?.[column.title]
     });
   }
 
@@ -132,6 +132,7 @@ async function extractColumn({
   qb,
   rootAlias,
   knex,
+  params,
   // @ts-ignore
   isLookup
 }: {
@@ -140,6 +141,7 @@ async function extractColumn({
   rootAlias: string;
   knex: XKnex;
   isLookup?: boolean;
+  params?: any;
 }) {
   const result = { isArray: false };
   if (isSystemColumn(column)) return result;
@@ -169,6 +171,8 @@ async function extractColumn({
               const childColumn = await column.colOptions.getChildColumn();
               const parentColumn = await column.colOptions.getParentColumn();
 
+              const mmListArgs = getListArgs(params, parentModel);
+
               const assocQb = knex(
                 knex.raw('?? as ??', [assocModel.table_name, alias1])
               ).whereRaw(`??.?? = ??.??`, [
@@ -189,7 +193,9 @@ async function extractColumn({
                     mmParentColumn.column_name
                   ])
                 )
-                .select(knex.raw('??.*', [alias2]));
+                .select(knex.raw('??.*', [alias2]))
+                .limit(+mmListArgs.limit)
+                .offset(+mmListArgs.offset);
 
               qb.joinRaw(
                 `LEFT OUTER JOIN LATERAL
@@ -264,12 +270,18 @@ async function extractColumn({
               const childModel = await column.colOptions.getRelatedTable();
               const childColumn = await column.colOptions.getChildColumn();
               const parentColumn = await column.colOptions.getParentColumn();
+
+              const hmListArgs = getListArgs(params, childModel);
+
               const hmQb = knex(childModel.table_name)
                 .select('*')
                 .where(
                   childColumn.column_name,
                   knex.raw('??.??', [rootAlias, parentColumn.column_name])
-                );
+                )
+
+                .limit(+hmListArgs.limit)
+                .offset(+hmListArgs.offset);
 
               qb.joinRaw(
                 `LEFT OUTER JOIN LATERAL
