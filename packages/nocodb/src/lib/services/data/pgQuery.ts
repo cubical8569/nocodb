@@ -271,7 +271,7 @@ async function extractColumn({
               const childColumn = await column.colOptions.getChildColumn();
               const parentColumn = await column.colOptions.getParentColumn();
 
-              const hmListArgs = getListArgs(params, childModel);
+              const hmListArgs = getListArgs(params || {}, childModel);
 
               const hmQb = knex(childModel.table_name)
                 .select('*')

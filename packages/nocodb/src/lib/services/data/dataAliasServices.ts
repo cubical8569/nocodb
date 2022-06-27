@@ -32,7 +32,7 @@ export async function getDataList(
   } catch (e) {}
 
   if (
-    (true || process.env.NC_PG_OPTIMISE || req?.headers?.['nc-pg-optimise']) &&
+    (process.env.NC_PG_OPTIMISE || req?.headers?.['nc-pg-optimise']) &&
     base.type === 'pg'
   ) {
     const out = await populateSingleQuery({

@@ -1,4 +1,4 @@
-oimport JobsMgr from './JobsMgr';
+import JobsMgr from './JobsMgr';
 import EmitteryJobsMgr from './EmitteryJobsMgr';
 import RedisJobsMgr from './RedisJobsMgr';
 
