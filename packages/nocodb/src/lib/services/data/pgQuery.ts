@@ -66,7 +66,7 @@ export async function populateSingleQuery(ctx: {
     new Filter({
       children:
         (await Filter.rootFilterList({
-          viewId: await Filter.getFilterObject({ viewId: ctx.view.id }),
+          viewId: ctx.view.id,
         })) || [],
       is_group: true,
     }),
