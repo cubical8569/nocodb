@@ -1,3 +1,4 @@
+import { sanitize } from '../../db/sql-data-mapper/lib/sql/helpers/sanitize';
 import Model from '../../models/Model';
 import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2';
 import { isSystemColumn, RelationTypes, UITypes } from 'nocodb-sdk';
@@ -5,7 +6,6 @@ import {
   extractFilterFromXwhere,
   extractSortsObject,
   getListArgs,
-  sanitize
 } from '../../db/sql-data-mapper/lib/sql/BaseModelSqlv2';
 import genRollupSelectv2 from '../../db/sql-data-mapper/lib/sql/genRollupSelectv2';
 import LookupColumn from '../../models/LookupColumn';
@@ -66,20 +66,20 @@ export async function populateSingleQuery(ctx: {
     new Filter({
       children:
         (await Filter.rootFilterList({
-          viewId: await Filter.getFilterObject({ viewId: ctx.view.id })
+          viewId: await Filter.getFilterObject({ viewId: ctx.view.id }),
         })) || [],
-      is_group: true
+      is_group: true,
     }),
     new Filter({
       children: ctx.params.filterArr || [],
       is_group: true,
-      logical_op: 'and'
+      logical_op: 'and',
     }),
     new Filter({
       children: queryFilterObj,
       is_group: true,
-      logical_op: 'and'
-    })
+      logical_op: 'and',
+    }),
   ];
 
   await conditionV2(aggrConditionObj, rootQb, knex);
@@ -93,7 +93,7 @@ export async function populateSingleQuery(ctx: {
     allowedCols = (await View.getColumns(ctx.view.id)).reduce(
       (o, c) => ({
         ...o,
-        [c.fk_column_id]: c.show
+        [c.fk_column_id]: c.show,
       }),
       {}
     );
@@ -105,7 +105,7 @@ export async function populateSingleQuery(ctx: {
       knex,
       rootAlias: ROOT_ALIAS,
       qb,
-      params: ctx?.params?.nested?.[column.title]
+      params: ctx?.params?.nested?.[column.title],
     });
   }
 
@@ -134,7 +134,7 @@ async function extractColumn({
   knex,
   params,
   // @ts-ignore
-  isLookup
+  isLookup,
 }: {
   column: Column;
   qb: QueryBuilder;
@@ -166,7 +166,8 @@ async function extractColumn({
 
               const parentModel = await column.colOptions.getRelatedTable();
               const mmChildColumn = await column.colOptions.getMMChildColumn();
-              const mmParentColumn = await column.colOptions.getMMParentColumn();
+              const mmParentColumn =
+                await column.colOptions.getMMParentColumn();
               const assocModel = await column.colOptions.getMMModel();
               const childColumn = await column.colOptions.getChildColumn();
               const parentColumn = await column.colOptions.getParentColumn();
@@ -179,7 +180,7 @@ async function extractColumn({
                 alias1,
                 mmChildColumn.column_name,
                 rootAlias,
-                childColumn.column_name
+                childColumn.column_name,
               ]);
 
               const mmQb = knex(assocQb.as(alias4))
@@ -190,7 +191,7 @@ async function extractColumn({
                     alias2,
                     parentColumn.column_name,
                     alias4,
-                    mmParentColumn.column_name
+                    mmParentColumn.column_name,
                   ])
                 )
                 .select(knex.raw('??.*', [alias2]))
@@ -211,7 +212,7 @@ async function extractColumn({
                              pkColumn.column_name,
                              alias3,
                              pkColumn.column_name,
-                             column.title
+                             column.title,
                            ]
                          )
                        )
@@ -250,7 +251,7 @@ async function extractColumn({
                              pkColumn.column_name,
                              alias2,
                              pkColumn.column_name,
-                             column.title
+                             column.title,
                            ]
                          )
                        )
@@ -297,7 +298,7 @@ async function extractColumn({
                              pkColumn.column_name,
                              alias2,
                              pkColumn.column_name,
-                             column.title
+                             column.title,
                            ]
                          )
                        )
@@ -319,9 +320,8 @@ async function extractColumn({
         const lookupColumn = await lookupColOpt.getLookupColumn();
 
         const relationColumn = await lookupColOpt.getRelationColumn();
-        const relationColOpts = await relationColumn.getColOptions<
-          LinkToAnotherRecordColumn
-        >();
+        const relationColOpts =
+          await relationColumn.getColOptions<LinkToAnotherRecordColumn>();
         let relQb;
         const relTableAlias = getAlias();
 
@@ -346,7 +346,7 @@ async function extractColumn({
                 alias1,
                 mmChildColumn.column_name,
                 rootAlias,
-                childColumn.column_name
+                childColumn.column_name,
               ]);
 
               relQb = knex(assocQb.as(alias4)).leftJoin(
@@ -356,7 +356,7 @@ async function extractColumn({
                   relTableAlias,
                   parentColumn.column_name,
                   alias4,
-                  mmParentColumn.column_name
+                  mmParentColumn.column_name,
                 ])
               );
             }
@@ -398,7 +398,7 @@ async function extractColumn({
           qb: relQb,
           rootAlias: relTableAlias,
           knex,
-          column: lookupColumn
+          column: lookupColumn,
         });
 
         if (!result.isArray) {
@@ -410,7 +410,7 @@ async function extractColumn({
                    knex.raw(`??.?? as ??`, [
                      alias2,
                      lookupColumn.title,
-                     column.title
+                     column.title,
                    ])
                  )
                  .toQuery()}) as ?? ON true`,
@@ -425,7 +425,7 @@ async function extractColumn({
                  .select(
                    knex.raw(`coalesce(json_agg(??),'[]'::json) as ??`, [
                      alias,
-                     column.title
+                     column.title,
                    ])
                  )
                  .toQuery()},json_array_elements(??.??) as ?? ) as ?? ON true`,
@@ -440,7 +440,7 @@ async function extractColumn({
                    knex.raw(`coalesce(json_agg(??.??),'[]'::json) as ??`, [
                      alias2,
                      lookupColumn.title,
-                     column.title
+                     column.title,
                    ])
                  )
                  .toQuery()}) as ?? ON true`,
@@ -472,7 +472,7 @@ async function extractColumn({
           await genRollupSelectv2({
             knex,
             columnOptions: await column.getColOptions(),
-            alias: rootAlias
+            alias: rootAlias,
           })
         ).builder.as(sanitize(column.title))
       );

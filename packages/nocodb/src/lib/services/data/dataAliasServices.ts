@@ -18,7 +18,7 @@ export async function getDataList(
   const baseModel = await Model.getBaseModelSQL({
     id: model.id,
     viewId: view?.id,
-    dbDriver: NcConnectionMgrv2.get(base)
+    dbDriver: NcConnectionMgrv2.get(base),
   });
 
   let data;
@@ -39,7 +39,7 @@ export async function getDataList(
       view,
       model,
       base,
-      params: listArgs
+      params: listArgs,
     });
     count = +out.count;
     data = out.data;
@@ -55,6 +55,6 @@ export async function getDataList(
 
   return new PagedResponseImpl(data, {
     ...req.query,
-    count
+    count,
   });
 }

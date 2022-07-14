@@ -611,6 +611,7 @@ class BaseModelSqlv2 {
   public async multipleMmList(
     { colId, parentIds },
     args: { limit?; offset? } = {}
+
   ) {
     const { where, sort, ...rest } = this._getListArgs(args as any);
     const relColumn = (await this.model.getColumns()).find(
