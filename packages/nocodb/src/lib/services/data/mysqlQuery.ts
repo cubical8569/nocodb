@@ -1,7 +1,7 @@
 import { sanitize } from '../../db/sql-data-mapper/lib/sql/helpers/sanitize';
 import Model from '../../models/Model';
 import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2';
-import { RelationTypes, UITypes } from 'nocodb-sdk';
+import { isSystemColumn, RelationTypes, UITypes } from 'nocodb-sdk';
 import {
   extractFilterFromXwhere,
   extractSortsObject,
@@ -21,6 +21,7 @@ import FormulaColumn from '../../models/FormulaColumn';
 import formulaQueryBuilderv2 from '../../db/sql-data-mapper/lib/sql/formulav2/formulaQueryBuilderv2';
 import View from '../../models/View';
 import Base from '../../models/Base';
+
 const ROOT_ALIAS = '__nc_root';
 
 let aliasC = 0;
@@ -98,8 +99,11 @@ export async function populateSingleQuery(ctx: {
       {}
     );
 
+  const cols: string[] = [];
+
   for (const column of await ctx.model.getColumns()) {
     if (allowedCols && !allowedCols[column.id]) continue;
+    if(!isSystemColumn(column))cols.push(column.title);
     await extractColumn({
       column,
       knex,
@@ -117,16 +121,19 @@ export async function populateSingleQuery(ctx: {
   const finalQb = knex
     .from(qb.as(dataAlias))
     .select(
-      knex.raw(`coalesce(json_agg(??.*),'[]'::json) as ??`, [dataAlias, 'data'])
+      knex.raw(
+        `json_arrayagg(
+   json_object(${cols.map(() => `?, ??.??`).join(',')})
+   ) as ??`,
+        [...cols.flatMap((c) => [c, dataAlias, c]), 'data']
+      )
     )
     .select(countQb.as('count'))
     .first();
 
-  console.log(finalQb.toString());
-
   const res = await finalQb;
 
-  return res;
+  return res as any;
 }
 
 async function extractColumn({
@@ -146,11 +153,7 @@ async function extractColumn({
   params?: any;
 }) {
   const result = { isArray: false };
-  // todo: check system field enabled / not
-  //      filter on nested list
-  //      sort on nested list
-
-  // if (isSystemColumn(column)) return result;
+  if (isSystemColumn(column)) return result;
   // const model = await column.getModel();
   switch (column.uidt) {
     case UITypes.LinkToAnotherRecord:
@@ -210,12 +213,12 @@ async function extractColumn({
                        .from(mmQb.as(alias3))
                        .select(
                          knex.raw(
-                           `coalesce(json_agg(jsonb_build_object(?,??.??, ?, ??.??)),'[]'::json) as ??`,
+                           `json_arrayagg(json_object(?,??.??, ?, ??.??)) as ??`,
                            [
-                             pvColumn.column_name,
+                             pvColumn.title,
                              alias3,
                              pvColumn.column_name,
-                             pkColumn.column_name,
+                             pkColumn.title,
                              alias3,
                              pkColumn.column_name,
                              column.title,
@@ -248,18 +251,15 @@ async function extractColumn({
                      (${knex
                        .from(btQb.as(alias2))
                        .select(
-                         knex.raw(
-                           `json_build_object(?,??.??, ?, ??.??) as ??`,
-                           [
-                             pvColumn.column_name,
-                             alias2,
-                             pvColumn.column_name,
-                             pkColumn.column_name,
-                             alias2,
-                             pkColumn.column_name,
-                             column.title,
-                           ]
-                         )
+                         knex.raw(`json_object(?,??.??, ?, ??.??) as ??`, [
+                           pvColumn.title,
+                           alias2,
+                           pvColumn.column_name,
+                           pkColumn.title,
+                           alias2,
+                           pkColumn.column_name,
+                           column.title,
+                         ])
                        )
                        .toQuery()}) as ?? ON true`,
                 [alias1]
@@ -296,12 +296,12 @@ async function extractColumn({
                        .from(hmQb.as(alias2))
                        .select(
                          knex.raw(
-                           `coalesce(json_agg(jsonb_build_object(?,??.??, ?, ??.??)),'[]'::json) as ??`,
+                           `json_arrayagg(json_object(?,??.??, ?, ??.??)) as ??`,
                            [
-                             pvColumn.column_name,
+                             pvColumn.title,
                              alias2,
                              pvColumn.column_name,
-                             pkColumn.column_name,
+                             pkColumn.title,
                              alias2,
                              pkColumn.column_name,
                              column.title,
@@ -429,10 +429,7 @@ async function extractColumn({
                (${knex
                  .from(relQb.as(alias2))
                  .select(
-                   knex.raw(`coalesce(json_agg(??),'[]'::json) as ??`, [
-                     alias,
-                     column.title,
-                   ])
+                   knex.raw(`json_arrayagg(??) as ??`, [alias, column.title])
                  )
                  .toQuery()},json_array_elements(??.??) as ?? ) as ?? ON true`,
             [alias2, lookupColumn.title, alias, lookupTableAlias]
@@ -443,7 +440,7 @@ async function extractColumn({
                (${knex
                  .from(relQb.as(alias2))
                  .select(
-                   knex.raw(`coalesce(json_agg(??.??),'[]'::json) as ??`, [
+                   knex.raw(`json_arrayagg(??.??) as ??`, [
                      alias2,
                      lookupColumn.title,
                      column.title,
