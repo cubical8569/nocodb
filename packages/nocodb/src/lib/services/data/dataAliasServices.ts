@@ -5,7 +5,8 @@ import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2';
 import getAst from '../../db/sql-data-mapper/lib/sql/helpers/getAst';
 import { PagedResponseImpl } from '../../meta/helpers/PagedResponse';
 import { nocoExecute } from 'nc-help';
-import { populateSingleQuery } from './mysqlQuery';
+import { populateSingleQuery as pgPopulateSingleQuery } from './pgQuery';
+import { populateSingleQuery as mysqlPopulateSingleQuery } from './mysqlQuery';
 import { Request } from 'express';
 
 export async function getDataList(
@@ -32,11 +33,12 @@ export async function getDataList(
   } catch (e) {}
 
   if (
-    true
-    // (process.env.NC_PG_OPTIMISE || req?.headers?.['nc-pg-optimise']) &&
-    // base.type === 'pg'
+    (process.env.NC_PG_OPTIMISE || req?.headers?.['nc-pg-optimise']) &&
+    (base.type === 'pg' || base.type === 'mysql2')
   ) {
-    const out = await populateSingleQuery({
+    const out = await (base.type === 'pg'
+      ? pgPopulateSingleQuery
+      : mysqlPopulateSingleQuery)({
       view,
       model,
       base,
