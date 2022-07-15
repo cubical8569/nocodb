@@ -1,7 +1,7 @@
 import { sanitize } from '../../db/sql-data-mapper/lib/sql/helpers/sanitize';
 import Model from '../../models/Model';
 import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2';
-import { isSystemColumn, RelationTypes, UITypes } from 'nocodb-sdk';
+import { RelationTypes, UITypes } from 'nocodb-sdk';
 import {
   extractFilterFromXwhere,
   extractSortsObject,
@@ -144,7 +144,11 @@ async function extractColumn({
   params?: any;
 }) {
   const result = { isArray: false };
-  if (isSystemColumn(column)) return result;
+  // todo: check system field enabled / not
+  //      filter on nested list
+  //      sort on nested list
+
+  // if (isSystemColumn(column)) return result;
   // const model = await column.getModel();
   switch (column.uidt) {
     case UITypes.LinkToAnotherRecord:
