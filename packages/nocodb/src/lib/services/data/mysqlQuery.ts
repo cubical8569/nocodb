@@ -153,7 +153,7 @@ async function extractColumn({
   params?: any;
 }) {
   const result = { isArray: false };
-  if (isSystemColumn(column)) return result;
+  // if (isSystemColumn(column)) return result;
   // const model = await column.getModel();
   switch (column.uidt) {
     case UITypes.LinkToAnotherRecord:
