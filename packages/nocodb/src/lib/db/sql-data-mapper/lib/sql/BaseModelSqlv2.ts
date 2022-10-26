@@ -611,7 +611,6 @@ class BaseModelSqlv2 {
   public async multipleMmList(
     { colId, parentIds },
     args: { limit?; offset? } = {}
-
   ) {
     const { where, sort, ...rest } = this._getListArgs(args as any);
     const relColumn = (await this.model.getColumns()).find(
@@ -1388,23 +1387,7 @@ class BaseModelSqlv2 {
   }
 
   _getListArgs(args: XcFilterWithAlias): XcFilter {
-    const obj: XcFilter = {};
-    obj.where = args.where || args.w || '';
-    obj.having = args.having || args.h || '';
-    obj.shuffle = args.shuffle || args.r || '';
-    obj.condition = args.condition || args.c || {};
-    obj.conditionGraph = args.conditionGraph || {};
-    obj.limit = Math.max(
-      Math.min(
-        args.limit || args.l || this.config.limitDefault,
-        this.config.limitMax
-      ),
-      this.config.limitMin
-    );
-    obj.offset = Math.max(+(args.offset || args.o) || 0, 0);
-    obj.fields = args.fields || args.f || '*';
-    obj.sort = args.sort || args.s;
-    return obj;
+    return getListArgs(args, this.model);
   }
 
   public async shuffle({ qb }: { qb: Knex.QueryBuilder }): Promise<void> {
@@ -3033,6 +3016,7 @@ export function getListArgs(args: XcFilterWithAlias, model: Model): XcFilter {
   const obj: XcFilter = {};
   obj.where = args.where || args.w || '';
   obj.having = args.having || args.h || '';
+  obj.shuffle = args.shuffle || args.r || '';
   obj.condition = args.condition || args.c || {};
   obj.conditionGraph = args.conditionGraph || {};
   obj.limit = Math.max(
