@@ -95,7 +95,8 @@ async function dataDelete(req: Request, res: Response) {
   }
   res.json(await baseModel.delByPk(req.params.rowId, null, req));
 }
-async function getDataList(model, view: View, req) {
+
+/*async function getDataList(model, view: View, req) {
   const base = await Base.get(model.base_id);
 
   const baseModel = await Model.getBaseModelSQL({
@@ -135,8 +136,8 @@ async function getDataList(model, view: View, req) {
     ...req.query,
     count,
   });
-}
-*/
+}*/
+
 
 async function getFindOne(model, view: View, req) {
   const base = await Base.get(model.base_id);
