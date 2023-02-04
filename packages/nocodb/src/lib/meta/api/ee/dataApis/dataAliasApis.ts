@@ -1,4 +1,4 @@
-import { Request, Response, } from 'express';
+import { Request, Response } from 'express';
 import { getViewAndModelFromRequestByAliasOrId } from '../../dataApis/helpers';
 
 import * as dataAliasServices from '../../../../services/ee/data/dataAliasServices';

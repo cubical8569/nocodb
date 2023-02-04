@@ -1,48 +1,45 @@
-import View from '../../models/View'
-import Base from '../../models/Base'
-import Model from '../../models/Model'
-import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2'
-import getAst from '../../db/sql-data-mapper/lib/sql/helpers/getAst'
-import { PagedResponseImpl } from '../../meta/helpers/PagedResponse'
-import { nocoExecute } from 'nc-help'
-import { Request } from 'express'
+import View from '../../models/View';
+import Base from '../../models/Base';
+import Model from '../../models/Model';
+import NcConnectionMgrv2 from '../../utils/common/NcConnectionMgrv2';
+import getAst from '../../db/sql-data-mapper/lib/sql/helpers/getAst';
+import { PagedResponseImpl } from '../../meta/helpers/PagedResponse';
+import { nocoExecute } from 'nc-help';
+import { Request } from 'express';
 
 export async function getDataList(
   model: Model,
   view: View,
-  req: Request,
+  req: Request
 ): Promise<PagedResponseImpl<any>> {
-  const base = await Base.get(model.base_id)
+  const base = await Base.get(model.base_id);
 
   const baseModel = await Model.getBaseModelSQL({
     id: model.id,
     viewId: view?.id,
     dbDriver: NcConnectionMgrv2.get(base),
-  })
+  });
 
-  let data
-  let count
-  const listArgs: any = { ...req.query }
+  let data;
+  let count;
+  const listArgs: any = { ...req.query };
   try {
-    listArgs.filterArr = JSON.parse(listArgs.filterArrJson)
-  } catch (e) {
-  }
+    listArgs.filterArr = JSON.parse(listArgs.filterArrJson);
+  } catch (e) {}
   try {
-    listArgs.sortArr = JSON.parse(listArgs.sortArrJson)
-  } catch (e) {
-  }
+    listArgs.sortArr = JSON.parse(listArgs.sortArrJson);
+  } catch (e) {}
 
-  const requestObj = await getAst({ model, query: req.query, view })
+  const requestObj = await getAst({ model, query: req.query, view });
 
-  const rootData = await baseModel.list(listArgs)
+  const rootData = await baseModel.list(listArgs);
 
-  data = await nocoExecute(requestObj, rootData, {}, listArgs)
+  data = await nocoExecute(requestObj, rootData, {}, listArgs);
 
-  count = await baseModel.count(listArgs)
-
+  count = await baseModel.count(listArgs);
 
   return new PagedResponseImpl(data, {
     ...req.query,
     count,
-  })
+  });
 }

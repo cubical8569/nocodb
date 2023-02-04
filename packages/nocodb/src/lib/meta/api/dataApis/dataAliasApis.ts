@@ -138,7 +138,6 @@ async function dataDelete(req: Request, res: Response) {
   });
 }*/
 
-
 async function getFindOne(model, view: View, req) {
   const base = await Base.get(model.base_id);
 
