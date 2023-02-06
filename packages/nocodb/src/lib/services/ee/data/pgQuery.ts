@@ -12,7 +12,7 @@ import LookupColumn from '../../../models/LookupColumn';
 import LinkToAnotherRecordColumn from '../../../models/LinkToAnotherRecordColumn';
 import Column from '../../../models/Column';
 import { XKnex } from '../../../db/sql-data-mapper';
-import { QueryBuilder } from 'knex';
+import { Knex } from 'knex';
 import Sort from '../../../models/Sort';
 import Filter from '../../../models/Filter';
 import conditionV2 from '../../../db/sql-data-mapper/lib/sql/conditionV2';
@@ -139,7 +139,7 @@ async function extractColumn({
   isLookup,
 }: {
   column: Column;
-  qb: QueryBuilder;
+  qb: Knex.QueryBuilder;
   rootAlias: string;
   knex: XKnex;
   isLookup?: boolean;
