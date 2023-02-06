@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import Model from '../../../models/Model';
 import { nocoExecute } from 'nc-help';
 import Base from '../../../models/Base';
+import Noco from '../../../Noco';
 import NcConnectionMgrv2 from '../../../utils/common/NcConnectionMgrv2';
 import { NcError } from '../../helpers/catchError';
 import { PagedResponseImpl } from '../../helpers/PagedResponse';
@@ -12,11 +13,18 @@ import apiMetrics from '../../helpers/apiMetrics';
 import getAst from '../../../db/sql-data-mapper/lib/sql/helpers/getAst';
 
 import * as dataAliasServices from '../../../services/data/dataAliasServices';
+import * as dataAliasServicesEe from '../../../services/ee/data/dataAliasServices';
 
 // todo: Handle the error case where view doesnt belong to model
 async function dataList(req: Request, res: Response) {
   const { model, view } = await getViewAndModelFromRequestByAliasOrId(req);
-  res.json(await dataAliasServices.getDataList(model, view, req));
+  res.json(
+    await (Noco.isEE() ? dataAliasServicesEe : dataAliasServices).getDataList(
+      model,
+      view,
+      req
+    )
+  );
 }
 
 async function dataFindOne(req: Request, res: Response) {

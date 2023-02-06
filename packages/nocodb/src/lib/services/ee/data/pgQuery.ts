@@ -43,7 +43,7 @@ export async function populateSingleQuery(ctx: {
   const knex = NcConnectionMgrv2.get(ctx.base);
   // load columns list
   await ctx.model.getColumns();
-  const listArgs = getListArgs(ctx.params, ctx.model);
+  const listArgs = getListArgs(ctx.params ?? {}, ctx.model);
 
   const rootQb = knex(ctx.model.table_name);
   const countQb = knex(ctx.model.table_name);
@@ -178,7 +178,7 @@ async function extractColumn({
               const childColumn = await column.colOptions.getChildColumn();
               const parentColumn = await column.colOptions.getParentColumn();
 
-              const mmListArgs = getListArgs(params, parentModel);
+              const mmListArgs = getListArgs(params ?? {}, parentModel);
 
               const assocQb = knex(
                 knex.raw('?? as ??', [assocModel.table_name, alias1])

@@ -181,7 +181,7 @@ async function extractColumn({
               const childColumn = await column.colOptions.getChildColumn();
               const parentColumn = await column.colOptions.getParentColumn();
 
-              const mmListArgs = getListArgs(params, parentModel);
+              const mmListArgs = getListArgs(params ?? {}, parentModel);
 
               const assocQb = knex(
                 knex.raw('?? as ??', [assocModel.table_name, alias1])

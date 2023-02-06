@@ -9,6 +9,7 @@
     <envs>
       <env name="NC_DISABLE_CACHE1" value="true" />
       <env name="NC_DISABLE_TELE" value="true" />
+      <env name="NC_PG_OPTIMISE" value="true" />
     </envs>
     <method v="2" />
   </configuration>
